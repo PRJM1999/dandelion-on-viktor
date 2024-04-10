@@ -1,4 +1,3 @@
-
 import logging
 from . import utci_optimised
 from . import utility
@@ -96,13 +95,6 @@ def utci(dryBulbTemp, radiantTemp, windSpeed, relativeHumidity, units="SI",
     output = {'utci':np.round_(utci_approx, 5).tolist()}
 
     #postporocessing
-    #just text for displaying with results
-    # comfort_cat_def = {
-    #     'Cold stress': 'UTCI <0\xB0C',
-    #     'Comfortable for short period': '0\xB0C < UTCI < 9\xB0C and 26\xB0C < UTCI < 28\xB0C',
-    #     'Comfortable': '9\xB0C < UTCI < 26\xB0C',
-    #     'Heat stress': ' UTCI < 32\xB0C'
-    #     }
     comfort_cat_def = [
         'UTCI <0\xB0C',
         '0\xB0C < UTCI < 9\xB0C and 26\xB0C < UTCI < 28\xB0C',
