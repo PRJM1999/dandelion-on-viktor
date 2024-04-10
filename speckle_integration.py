@@ -5,7 +5,7 @@ class SpeckleIntegration:
     def __init__(self):
         self.client = self.initialize_speckle_client()
 
-    def initialize_speckle_client(self, ):
+    def initialize_speckle_client(self):
         """Initializes and returns a Speckle client."""
         client = SpeckleClient(host="https://speckle.uksouth.cloudapp.azure.com")
         account = get_default_account()

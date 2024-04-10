@@ -4,7 +4,6 @@ from speckle_integration import SpeckleIntegration
 import json
 
 projects = SpeckleIntegration().get_projects()
-print(projects)
 
 class Parametrization(ViktorParametrization):
     projects_json = Text(str(projects[0].name))
