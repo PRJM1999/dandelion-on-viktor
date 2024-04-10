@@ -49,10 +49,19 @@ class UTCICalculator(WeatherAnalysis):
 
         return output
 
+    def _get_category(self, utci_value: float, category_dict: dict) -> str:
+        """
+        Determines the category of the given UTCI value based on predefined bounds.
 
-    def _get_category(self, utci_value, category_dict):
+        Parameters:
+        - utci_value (float): The Universal Thermal Climate Index value to categorize.
+        - category_dict (dict): A dictionary mapping string bounds to category labels.
+
+        Returns:
+        - str: The category label if a matching range is found; "unknown" otherwise.
+
+        """
         for key, category in category_dict.items():
-            # Split the key into lower and upper bounds, then handle 'null' appropriately
             bounds = key.split(', ')
             lower = float(bounds[0]) if bounds[0] != "null" else None
             upper = float(bounds[1]) if bounds[1] != "null" else None
@@ -61,8 +70,19 @@ class UTCICalculator(WeatherAnalysis):
                 return category
         return "unknown"
 
+    def _exponential(self, t_db: float) -> float:
+        """
+        Calculates the saturation vapor pressure (es) of air at a given 
+        temperature using an adjusted Magnus-Tetens approximation.
 
-    def _exponential(self, t_db):
+        Parameters:
+        - t_db (float): The dry-bulb temperature in degrees Celsius.
+
+        Returns:
+        - es (float): The saturation vapor pressure in hectoPascals (hPa), which indicates the maximum amount of water vapor 
+                    that air can hold at the specified temperature.
+        """
+        
         g = [
             -2836.5744,
             -6028.076559,
