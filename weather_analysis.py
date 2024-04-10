@@ -32,7 +32,7 @@ class UTCICalculator(WeatherAnalysis):
         with open(file_path, 'r') as file:
             return json.load(file)
 
-    def calculate(self, return_stress_category=False, return_comfort_rating=False):
+    def calculate(self):
         eh_pa = self._exponential(self.weather_data.dry_bulb_temp) * (self.weather_data.relative_humidity / 100.0)
         delta_t_tr = self.weather_data.radiant_temp - self.weather_data.dry_bulb_temp
         pa = eh_pa / 10.0
@@ -41,11 +41,8 @@ class UTCICalculator(WeatherAnalysis):
         
         output = {'utci': np.round_(utci_approx, 5).tolist()}
 
-        if return_stress_category:
-            output['stress_category'] = self._get_category(utci_approx, self.categories['STRESS_CATEGORIES'])
-        
-        if return_comfort_rating:
-            output['comfort_rating'] = self._get_category(utci_approx, self.categories['COMFORT_RATINGS'])
+        output['stress_category'] = self._get_category(utci_approx, self.categories['STRESS_CATEGORIES'])
+        output['comfort_rating'] = self._get_category(utci_approx, self.categories['COMFORT_RATINGS'])
 
         return output
 
