@@ -1,0 +1,15 @@
+{
+    "STRESS_CATEGORIES": {
+      "-13, null": "extreme cold stress",
+      "0, 9": "no thermal stress",
+      "9, 26": "moderate heat stress",
+      "26, null": "extreme heat stress"
+    },
+    "COMFORT_RATINGS": {
+      "-13, null": "very uncomfortable",
+      "0, 9": "slightly uncomfortable",
+      "9, 26": "comfortable",
+      "26, null": "uncomfortable"
+    }
+  }
+  
