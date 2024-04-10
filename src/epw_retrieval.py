@@ -6,6 +6,7 @@ class EpwRetrievalMethod(ABC):
     Method to retreve relevant EPW file
     """
 
+    @abstractmethod
     def fetch_by_coords(self, lat: float, lng: float) -> object:
         """
         Fetches the closet EPW data based upon global coordinates.
@@ -18,3 +19,13 @@ class EpwRetrievalMethod(ABC):
         - object: EPW weather data 
         """
         pass
+
+
+class MongoEpwStorage(EpwRetrievalMethod):
+    """
+    Retrieves EPW file from internal AtkinsRealis database.
+    """
+    
+    def fetch_by_coords(self, lat: float, lng: float) -> object:
+        return super().fetch_by_coords(lat, lng)
+

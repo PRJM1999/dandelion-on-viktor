@@ -1,6 +1,6 @@
 import logging
-from . import utci_optimised
-from . import utility
+from .src import utci_optimised
+from .src import utility
 import numpy as np
 
 def utci(dryBulbTemp, radiantTemp, windSpeed, relativeHumidity, units="SI", 
