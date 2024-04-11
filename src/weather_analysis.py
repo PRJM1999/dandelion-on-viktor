@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from src.data_objects import WeatherData
+from data_objects import WeatherData
 from utility import utci_optimised
 import numpy as np
 import json

@@ -1,9 +1,9 @@
 import pytest
-from src.data_objects import WeatherData  
+from data_objects import WeatherData  
 
 @pytest.fixture
 def mock_units_converter(mocker):
-    mock = mocker.patch("src.utility.units_converter")
+    mock = mocker.patch("utility.units_converter")
     mock.return_value = (23.0, 25.0, 5.0) 
     return mock
 
