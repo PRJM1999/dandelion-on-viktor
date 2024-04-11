@@ -1,6 +1,6 @@
 from viktor import ViktorController
 from viktor.parametrization import ViktorParametrization, Text, OptionField
-from src.speckle_integration import SpeckleIntegration
+from src.project_retrieval.speckle_integration import SpeckleIntegration
 
 projects = SpeckleIntegration().get_projects()
 

@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from utility import units_converter
+from src.utility import units_converter
 
 @dataclass
 class WeatherData:
