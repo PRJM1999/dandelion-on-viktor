@@ -1,5 +1,5 @@
 import pytest
-from src.weather_data import WeatherData  
+from src.analysis.weather_data import WeatherData  
 
 @pytest.fixture
 def mock_units_converter(mocker):
