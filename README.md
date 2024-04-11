@@ -32,4 +32,3 @@ This will generate a `htmlcov` directory containing the coverage report in HTML 
 
 To maintain and ensure the reliability and stability of our production environment, we require a **minimum test coverage score of 75%**. This threshold helps us ensure that the majority of our codebase is covered by tests, reducing the likelihood of bugs and regressions.
 
-Developers are encouraged to strive for even higher coverage wherever possible, as this significantly contributes to the overall health and maintainability of the project.
