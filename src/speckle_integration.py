@@ -17,5 +17,3 @@ class SpeckleIntegration:
         """Fetches projects from Speckle and returns them."""
         projects = self.client.stream.list()  # Adjust based on what you want to fetch
         return projects
-
-print(SpeckleIntegration().get_projects())

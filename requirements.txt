@@ -3,3 +3,4 @@ specklepy==2.18.3
 numpy
 pytest
 pytest-mock
+pymongo

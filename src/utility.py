@@ -1,4 +1,5 @@
 import numpy as np
+from math import radians, cos, sin, asin, sqrt
 
 def units_converter(from_units="ip", **kwargs):
     """Converts IP values to SI units.
@@ -40,21 +41,18 @@ def valid_range(x, valid):
     """Filter values based on a valid range."""
     return np.where((x >= valid[0]) & (x <= valid[1]), x, np.nan)
 
-def mapping(value, map_dictionary, right=True):
-    """Maps a temperature array to stress categories.
-    Parameters
-    ----------
-    value : float, array-like
-        Temperature to map.
-    map_dictionary: dict
-        Dictionary used to map the values
-    right: bool, optional
-        Indicating whether the intervals include the right or the left bin edge.
-    Returns
-    -------
-    Stress category for each input temperature.
+def haversine(lon1: float, lat1: float, lon2: float, lat2: float) -> float:
     """
-
-    bins = np.array(list(map_dictionary.keys()))
-    words = np.append(np.array(list(map_dictionary.values())), 404)
-    return words[np.digitize(value, bins, right=right)] 
+    Calculate the great circle distance in kilometers between two points 
+    on the earth (specified in decimal degrees).
+    """
+    # Convert decimal degrees to radians 
+    lon1, lat1, lon2, lat2 = map(radians, [lon1, lat1, lon2, lat2])
+    # Haversine formula 
+    dlon = lon2 - lon1 
+    dlat = lat2 - lat1 
+    a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
+    c = 2 * asin(sqrt(a)) 
+    # Radius of earth in kilometers is 6371
+    km = 6371 * c
+    return km 
