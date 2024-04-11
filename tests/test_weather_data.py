@@ -25,9 +25,9 @@ def test_units_conversion_to_si(mock_units_converter):
     # Test that units are converted to SI if initially in IP
     weather = WeatherData(dry_bulb_temp=86, radiant_temp=90, wind_speed=10, relative_humidity=50, units="IP")
     assert weather.units == "SI", "Units should be converted to SI"
-    assert weather.dry_bulb_temp == 23.0, "Dry bulb temperature should be converted to SI units"
-    assert weather.radiant_temp == 25.0, "Radiant temperature should be converted to SI units"
-    assert weather.wind_speed == 5.0, "Wind speed should be converted to SI units"
+    assert weather.dry_bulb_temp == 30.0, "Dry bulb temperature should be converted to SI units"
+    assert round(weather.radiant_temp, 2) == 32.22, "Radiant temperature should be converted to SI units"
+    assert round(weather.wind_speed, 2) == 3.05, "Wind speed should be converted to SI units"
 
 def test_no_units_conversion_when_already_si():
     # Test that no conversion happens if units are already SI
