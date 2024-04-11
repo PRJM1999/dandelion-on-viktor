@@ -4,3 +4,4 @@ numpy
 pytest
 pytest-mock
 pymongo
+pytest-cov
