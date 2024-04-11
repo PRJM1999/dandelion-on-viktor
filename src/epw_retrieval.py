@@ -1,55 +1,58 @@
 from abc import ABC, abstractmethod
-from typing import List
+from typing import List, Dict, Optional
 from pymongo import MongoClient
 from utility import haversine
 
 class EpwRetrievalMethod(ABC):
     """
-    Method to retreve relevant EPW file
+    Abstract base class to retrieve relevant EPW file.
     """
 
     @abstractmethod
-    def fetch_by_coords(self, lat: float, lng: float) -> object:
+    def fetch_closest_station(self, lat: float, lng: float) -> Optional[Dict]:
         """
-        Fetches the closet EPW data based upon global coordinates.
+        Fetches the closest EPW stations based upon global coordinates.
 
         Parameters:
-        - lat (float): WGS84 Lattitude.
+        - lat (float): WGS84 Latitude.
         - lng (float): WGS84 Longitude.
 
         Returns:
-        - object: EPW weather data 
+        - Dict: Weather Station Data, or None if no station is found.
         """
         pass
 
+    @abstractmethod
+    def fetch_range_stations(self, lat: float, lng: float, radius: float) -> List[Dict]:
+        """
+        Fetches the EPW stations within a radial displacement of global coordinates.
+
+        Parameters:
+        - lat (float): WGS84 Latitude.
+        - lng (float): WGS84 Longitude.
+        - radius (float): Radial displacement in km.
+
+        Returns:
+        - List[Dict]: List containing weather stations.
+        """
+        pass
 
 class MongoEpwStorage(EpwRetrievalMethod):
     """
-    Retrieves EPW file from internal AtkinsRealis database.
+    Retrieves EPW file from internal database.
     """
 
     def __init__(self):
-        self.client = MongoClient( 'mongodb://adminhcd:rD%5ETXq%407i7Bn@52.151.65.152:27017/admin?authSource=admin&readPreference=primary&appname=MongoDB%20Compass&ssl=false')
+        self.client = MongoClient('mongodb://adminhcd:rD%5ETXq%407i7Bn@52.151.65.152:27017/admin?authSource=admin&readPreference=primary&appname=MongoDB%20Compass&ssl=false')
         self.db = self.client['dandelion']
         self.collection = self.db['epw']
-    
-    def fetch_by_coords(self, lat: float, lng: float, closest: bool = True, radius: float = None) -> List[dict]:
+
+    def fetch_closest_station(self, lat: float, lng: float) -> Optional[Dict]:
         documents = self.collection.find({})
-        distances = []
+        distances = [(doc, haversine(lng, lat, doc['lng'], doc['lat'])) for doc in documents]
+        closest_doc = min(distances, key=lambda x: x[1])[0] if distances else None
+        return closest_doc
 
-        for doc in documents:
-            distance = haversine(lng, lat, doc['lng'], doc['lat'])
-            if closest:
-                distances.append((doc, distance))
-            elif radius is not None and distance <= radius:
-                distances.append((doc, distance))
-
-        if closest:
-            # Find the document with the minimum distance
-            closest_doc = min(distances, key=lambda x: x[1])[0] if distances else None
-            return [closest_doc] if closest_doc else []
-        else:
-            # Return all documents within the specified radius
-            return [doc for doc, _ in distances]
-
-
+    def fetch_range_stations(self, lat: float, lng: float, radius: float = 10) -> List[Dict]:
+        documents = self.collection.find({})
+        return [doc for doc in documents if haversine(lng, lat, doc['lng'], doc['lat']) <= radius]
