@@ -1,5 +1,5 @@
 import pytest
-from src.station_retrieval.mongodb_station import MongoEpwStorage
+from src.station_retrieval import MongoEpwStorage
 from unittest.mock import patch
 
 # Keep the example documents and fixtures as before
