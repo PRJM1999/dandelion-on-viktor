@@ -1,42 +1,6 @@
 import numpy as np
 from math import radians, cos, sin, asin, sqrt
 
-def units_converter(from_units="ip", **kwargs):
-    """Converts IP values to SI units.
-    Parameters
-    ----------
-    from_units: str
-        specify system to convert from
-    **kwargs : [t, v]
-    Returns
-    -------
-    converted values in SI units
-    """
-    results = list()
-    if from_units == "ip":
-        for key, value in kwargs.items():
-            if "tmp" in key or key == "tr" or key == "tdb":
-                results.append((value - 32) * 5 / 9)
-            if key in ["v", "vr", "vel"]:
-                results.append(value / 3.281)
-            if key == "area":
-                results.append(value / 10.764)
-            if key == "pressure":
-                results.append(value * 101325)
-
-    elif from_units == "si":
-        for key, value in kwargs.items():
-            if "tmp" in key or key == "tr" or key == "tdb":
-                results.append((value * 9 / 5) + 32)
-            if key in ["v", "vr", "vel"]:
-                results.append(value * 3.281)
-            if key == "area":
-                results.append(value * 10.764)
-            if key == "pressure":
-                results.append(value / 101325)
-
-    return results
-
 def valid_range(x, valid):
     """Filter values based on a valid range."""
     return np.where((x >= valid[0]) & (x <= valid[1]), x, np.nan)

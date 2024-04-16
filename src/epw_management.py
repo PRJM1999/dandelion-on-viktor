@@ -15,7 +15,7 @@ class EpwManager(ABC):
     """
 
     @abstractmethod
-    def get_weather_data(self):
+    def get_weather_data(self) -> WeatherData:
         pass
 
 class DownloadMethod(EpwManager):
@@ -24,7 +24,7 @@ class DownloadMethod(EpwManager):
         self.url = url
 
 
-    def get_weather_data(self):
+    def get_weather_data(self) -> WeatherData:
         # Download the zip file content securely
         response = requests.get(self.url, verify=False)
         response.raise_for_status()
@@ -52,5 +52,7 @@ class DownloadMethod(EpwManager):
                 wind_direction= epw_data.wind_direction,
                 wind_speed= epw_data.wind_speed,
                 relative_humidity=epw_data.relative_humidity,
-                units="SI" 
+                units= "SI" if epw_data.is_ip == False else "I{}"
             )
+    
+            return weather_data_instance
