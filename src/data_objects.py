@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from utility import units_converter
 from ladybug.datacollection import HourlyContinuousCollection
 
 @dataclass
