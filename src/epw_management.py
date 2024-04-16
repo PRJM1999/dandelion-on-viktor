@@ -54,12 +54,3 @@ class DownloadMethod(EpwManager):
                 relative_humidity=epw_data.relative_humidity,
                 units="SI" 
             )
-
-            print(weather_data_instance.wind_speed)
-
-            
-
-
-# Usage example
-url = "https://climate.onebuilding.org/WMO_Region_6_Europe/ALA_Aland_Islands/ALA_LU_Lumparland.Langnas.Harbour.027240_TMYx.2007-2021.zip"
-parsed_data = DownloadMethod(url).get_weather_data()
