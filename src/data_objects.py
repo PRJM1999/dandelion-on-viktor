@@ -1,27 +1,38 @@
 from dataclasses import dataclass
 from utility import units_converter
+from ladybug.datacollection import HourlyContinuousCollection
 
 @dataclass
 class WeatherData:
     """
-    Class for keeping track of weather data necessary for UTCI calculation.
+    Class for keeping track of weather data necessary for UTCI calculation using hourly data collections.
     """
-    dry_bulb_temp: float
-    radiant_temp: float
-    wind_speed: float
-    relative_humidity: float
+    dry_bulb_temp: HourlyContinuousCollection
+    radiant_temp: HourlyContinuousCollection
+    wind_speed: HourlyContinuousCollection
+    wind_direction: HourlyContinuousCollection
+    relative_humidity: HourlyContinuousCollection
     units: str = "SI"
 
     def __post_init__(self):
-        # Adjust wind speed according to UTCI applicability limits
-        self.wind_speed = max(0.5, min(self.wind_speed, 17))
         if self.units.lower() == "ip":
             self.convert_to_si()
-    
-    def convert_to_si(self):
-        # Utilise the units_converter function for conversion
-        converted_values = units_converter(from_units="ip", tdb=self.dry_bulb_temp, tr=self.radiant_temp, v=self.wind_speed)
-        self.dry_bulb_temp, self.radiant_temp, self.wind_speed = converted_values
 
+    def convert_to_si(self):
+        # Use built-in Ladybug methods to convert all relevant weather data to SI units
+        self.dry_bulb_temp = self.dry_bulb_temp.convert_to_si()
+        self.radiant_temp = self.radiant_temp.convert_to_si()
+        self.wind_speed = self.wind_speed.convert_to_si()
+        self.wind_direction = self.wind_speed.convert_to_si()
+        self.relative_humidity = self.wind_speed.convert_to_si()
         self.units = "SI"
+
+    def convert_to_ip(self):
+        # Convert all relevant weather data to Imperial units if needed
+        self.dry_bulb_temp = self.dry_bulb_temp.convert_to_ip()
+        self.radiant_temp = self.radiant_temp.convert_to_ip()
+        self.wind_speed = self.wind_speed.convert_to_ip()
+        self.wind_direction = self.wind_speed.convert_to_ip()
+        self.relative_humidity = self.wind_speed.convert_to_ip()
+        self.units = "IP"
 
