@@ -1,7 +1,5 @@
-from abc import ABC, abstractmethod
-from data_objects import WeatherData
-from utility import utci_optimised
-from data_objects import WeatherData
+from src.utility import utci_optimised
+from src.data_objects import WeatherData
 import numpy as np
 import json
 
@@ -11,8 +9,6 @@ class UTCICalculator():
     def __init__(self, weather_data: WeatherData):
         self.weather_data = weather_data
         self.categories = self._load_categories("src/categories.json")
-    
-    
 
     def calculate(self):
         eh_pa, delta_t_tr, pa = self._calculate_environmental_factors()
@@ -30,7 +26,7 @@ class UTCICalculator():
     def _load_categories(file_path):
         with open(file_path, 'r') as file:
             return json.load(file)
-    
+
     def _get_category(self, utci_value: float, category_dict: dict) -> str:
         """
         Determines the category of the given UTCI value based on predefined bounds.

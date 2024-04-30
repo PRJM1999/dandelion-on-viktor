@@ -1,11 +1,12 @@
 from abc import ABC, abstractmethod
-from data_objects import WeatherData
 import requests
 import zipfile
 import io
 import os
 import tempfile
 from ladybug.epw import EPW
+
+from src.data_objects import WeatherData
 
 
 class EpwManager(ABC):
@@ -23,14 +24,16 @@ class DownloadMethod(EpwManager):
     def __init__(self, url: str):
         self.url = url
 
-
-    def get_weather_data(self) -> WeatherData:
+    def get_zip_in_memory(self):
         # Download the zip file content securely
         response = requests.get(self.url, verify=False)
         response.raise_for_status()
 
         # Use BytesIO to treat the zip file as an in-memory bytes stream
-        zip_in_memory = io.BytesIO(response.content)
+        return io.BytesIO(response.content)
+
+    def get_weather_data(self) -> WeatherData:
+        zip_in_memory = self.get_zip_in_memory()
 
         # Extract the EPW file's content
         with zipfile.ZipFile(zip_in_memory) as zip_ref, tempfile.TemporaryDirectory() as temp_dir:

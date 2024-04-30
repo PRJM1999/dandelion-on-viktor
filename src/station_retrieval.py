@@ -1,7 +1,9 @@
 from abc import ABC, abstractmethod
 from typing import List, Dict, Optional
 from pymongo import MongoClient
-from utility import haversine
+
+from src.utility import haversine
+
 
 class WeatherStationRetrieval(ABC):
     """
