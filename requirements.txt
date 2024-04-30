@@ -6,3 +6,4 @@ pytest-mock
 pymongo
 pytest-cov
 ladybug-core
+geopy
