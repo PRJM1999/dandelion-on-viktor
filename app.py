@@ -1,17 +1,17 @@
-from pathlib import Path
-
 from viktor import ViktorController, UserError, Color
 from viktor.parametrization import ViktorParametrization, Text, OptionField, \
     GeoPointField, Step, NumberField, DownloadButton, ActionButton, GeoPoint, \
-    SetParamsButton, MapSelectInteraction, OptionListElement, LineBreak
+    SetParamsButton, MapSelectInteraction, OptionListElement, LineBreak, OutputField
 from viktor.utils import memoize
 from viktor.views import MapView, MapResult, MapPoint, MapPolygon, ImageView, ImageResult, DataView, \
-    DataGroup, DataItem, DataResult
+    DataGroup, DataItem, DataResult, PlotlyView, PlotlyResult
 from viktor.result import SetParamsResult, DownloadResult
 
 from geopy.distance import geodesic
 
+from src.epw_charts import epw_temp_flood_plot, epw_rh_flood_plot, epw_cloud_flood_plot
 from src.epw_management import DownloadMethod
+from src.speckle_integration import SpeckleIntegration
 from src.station_retrieval import MongoEpwStorage
 from src.weather_analysis import UTCICalculator
 
@@ -63,6 +63,18 @@ def weather_station_options(params, **kwargs):
     return [OptionListElement(label=station['name'], value=str(station['_id'])) for station in load_weather_stations(location.lat, location.lon, radius)]
 
 
+def selected_location(params, **kwargs):
+    location = params.step_1.geo_point
+    radius = params.step_1.radius
+    selected_weather_station = params.step_1.selected_location
+    if not all([location, radius, selected_weather_station]):
+        return ''
+    for station in load_weather_stations(location.lat, location.lon, radius):
+        if str(station['_id']) == selected_weather_station:
+            return station['name']
+    return ''
+
+
 class Parametrization(ViktorParametrization):
     """The Parametrization is used to define all the input parameters of the VIKTOR application."""
     step_1 = Step('Step 1 - Input Selection', views=['get_map_view'])
@@ -73,28 +85,34 @@ of environmental data extracted from EnergyPlus Weather .epw files.
 
 **Step 1: Select your location and radius**
     """)
+    # step_1.get_project_locations_btn = SetParamsButton('Get Project Locations', method='get_project_locations')
     step_1.geo_point = GeoPointField('Select a location', default=GeoPoint(51.5, -0.123))
     step_1.radius = NumberField('Radius', min=0, max=100, variant='slider', default=10, flex=100)
 
     step_1.step_2_text = Text("**Step 2: Select the location**")
-    step_1.selected_location = OptionField('Select Location having EPW files', options=weather_station_options, flex=66)
+    step_1.selected_location = OptionField('Select Location having EPW files', options=weather_station_options, visible=False)
     step_1.select_location_button = SetParamsButton('Select location from map',
                                                     method='set_location_from_selection',
-                                                    interaction=MapSelectInteraction('get_map_view', max_select=1))
-    step_1.lb001 = LineBreak()
-    step_1.download_epw_file_btn = DownloadButton('Download Weather data', method='download_weather_data', longpoll=True)
+                                                    interaction=MapSelectInteraction('get_map_view', max_select=1),
+                                                    flex=50)
+    step_1.location_output = OutputField('Location selected', value=selected_location, flex=50)
 
-    step_1.run_analysis_btn = ActionButton('Run Analysis', method='perform_action')
+    step_2 = Step('Step 2 - Analysis Results', width=20, views=['visualize_data',
+                                                                'get_epw_temperature_view',
+                                                                'get_epw_relative_humidity_view',
+                                                                'get_epw_cloud_cover_view'])
+    step_2.download_epw_file_btn = DownloadButton('Download Weather data', method='download_weather_data', longpoll=True, flex=100)
 
-    step_2 = Step('Step 2 - Analysis Results', views= ['visualize_data', 'create_img_result'])
 
-    Step('Step 2', previous_label='Go to step 1', next_label='Go to step 3')
-   
-
-class ModelController(ViktorController):   # defines entity type 'controller'
+class ModelController(ViktorController):
     """The Controller is used to define all the endpoints of the VIKTOR application."""
     label = 'Dandelion'      # label to be shown in the interface
     parametrization = Parametrization  # assign the parametrization class to the controller class
+
+    def get_project_locations(self, params, **kwargs):
+        speckle_integration = SpeckleIntegration()
+        print(speckle_integration.get_projects())
+        return SetParamsResult(params)
 
     @MapView('Map view', duration_guess=1)
     def get_map_view(self, params, **kwargs):
@@ -159,11 +177,6 @@ class ModelController(ViktorController):   # defines entity type 'controller'
         file_content = download_method.get_zip_in_memory()
         return DownloadResult(file_content=file_content, file_name='weather_data.zip')
 
-    @ImageView("Image", duration_guess=1)
-    def create_img_result(self, params, **kwargs):
-        image_path = Path(__file__).parent / 'images/1icon.png'
-        return ImageResult.from_path(image_path)
-
     @DataView("OUTPUT", duration_guess=1)
     def visualize_data(self, params, **kwargs):
         download_method = self._get_download_method(params)
@@ -178,10 +191,23 @@ class ModelController(ViktorController):   # defines entity type 'controller'
         )
         return DataResult(data)
 
-    def perform_action(self, params, **kwargs):
+    @PlotlyView('EPW temperature', duration_guess=10)
+    def get_epw_temperature_view(self, params, **kwargs):
         download_method = self._get_download_method(params)
-        epw_data = download_method.get_weather_data()
+        epw_data = download_method.get_parsed_epw()
+        fig = epw_temp_flood_plot(epw_data)
+        return PlotlyResult(fig.to_json())
 
-        # Run the UTCI analysis
-        analysed_data = UTCICalculator(epw_data).calculate()
-        print(analysed_data)
+    @PlotlyView('EPW Relative humidity', duration_guess=10)
+    def get_epw_relative_humidity_view(self, params, **kwargs):
+        download_method = self._get_download_method(params)
+        epw_data = download_method.get_parsed_epw()
+        fig = epw_rh_flood_plot(epw_data)
+        return PlotlyResult(fig.to_json())
+
+    @PlotlyView('EPW Cloud cover', duration_guess=10)
+    def get_epw_cloud_cover_view(self, params, **kwargs):
+        download_method = self._get_download_method(params)
+        epw_data = download_method.get_parsed_epw()
+        fig = epw_cloud_flood_plot(epw_data)
+        return PlotlyResult(fig.to_json())
