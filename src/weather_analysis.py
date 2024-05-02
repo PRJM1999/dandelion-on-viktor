@@ -14,7 +14,6 @@ class UTCICalculator():
         eh_pa, delta_t_tr, pa = self._calculate_environmental_factors()
         
         utci_approx = utci_optimised(self.weather_data.dry_bulb_temp.average, self.weather_data.wind_speed.average, delta_t_tr, pa)
-        
         output = {'utci': np.round_(utci_approx, 5).tolist()}
 
         output['stress_category'] = self._get_category(utci_approx, self.categories['STRESS_CATEGORIES'])

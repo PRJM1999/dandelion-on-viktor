@@ -7,3 +7,4 @@ pymongo
 pytest-cov
 ladybug-core
 geopy
+plotly
