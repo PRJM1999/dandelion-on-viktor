@@ -11,6 +11,7 @@ class WeatherData:
     wind_speed: HourlyContinuousCollection
     wind_direction: HourlyContinuousCollection
     relative_humidity: HourlyContinuousCollection
+    total_sky_cover: HourlyContinuousCollection
     units: str = "SI"
 
     def __post_init__(self):
@@ -23,7 +24,8 @@ class WeatherData:
         self.radiant_temp = self.radiant_temp.convert_to_si()
         self.wind_speed = self.wind_speed.convert_to_si()
         self.wind_direction = self.wind_speed.convert_to_si()
-        self.relative_humidity = self.wind_speed.convert_to_si()
+        self.relative_humidity = self.relative_humidity.convert_to_si()
+        self.total_sky_cover = self.total_sky_cover.convert_to_si()
         self.units = "SI"
 
     def convert_to_ip(self):
@@ -32,6 +34,7 @@ class WeatherData:
         self.radiant_temp = self.radiant_temp.convert_to_ip()
         self.wind_speed = self.wind_speed.convert_to_ip()
         self.wind_direction = self.wind_speed.convert_to_ip()
-        self.relative_humidity = self.wind_speed.convert_to_ip()
+        self.relative_humidity = self.relative_humidity.convert_to_ip()
+        self.total_sky_cover = self.total_sky_cover.convert_to_ip()
         self.units = "IP"
 

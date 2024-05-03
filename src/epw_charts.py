@@ -151,25 +151,96 @@ def epw_rh_flood_plot(epw):
     print('printing RH FloodPlot')
     selected_columns = ['year', 'month', 'day', 'hour', 'minute', 'relativeHumidity']
     data = epw[selected_columns]
-    data['datetime'] = data.apply(lambda x: datetime(int(x['year']), int(x['month']), int(x['day']), int(x['hour'] - 1), int(x['minute'])), axis=1)
+    # Convert the date and time fields into a datetime object
+    data['datetime'] = pd.to_datetime(data[['year', 'month', 'day', 'hour', 'minute']])
+    # Extract the day of the year for x-axis
     data['day_of_year'] = data['datetime'].dt.dayofyear
-    data['minutes'] = data['datetime'].apply(lambda x: x.hour * 60 + x.minute)
-    units = '%'
-    color_range = color_pallete_presets().blue_to_gray_11
-    color_gradient = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
-    return plotly_flood_plot(data, x='minutes', y='day_of_year', z='relativeHumidity')
+    # Compute minutes from midnight for y-axis
+    data['minutes'] = data['datetime'].dt.hour * 60 + data['datetime'].dt.minute
+
+    # Aggregate data by day of year and minutes
+    agg_data = data.groupby(['minutes', 'day_of_year']).mean()['relativeHumidity'].unstack()
+
+    # Create a heatmap
+    heatmap = go.Heatmap(
+        z=agg_data.values,  # Data values
+        x=agg_data.columns,  # Day of year on x-axis
+        y=agg_data.index,  # Minutes on y-axis
+        colorscale='blues',  # Color scale for the heatmap
+        colorbar=dict(
+            title='Relative Humidity',  # Title for the color bar indicating temperature in Celsius
+            titleside='right'
+        )
+    )
+
+    # Layout configuration, including custom tick marks
+    layout = go.Layout(
+        title='Relative Humidity %',
+        xaxis=dict(
+            title='Month',
+            tickmode='array',
+            tickvals=[15, 46, 74, 105, 135, 166, 196, 227, 258, 288, 319, 349],
+            ticktext=['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+        ),
+        yaxis=dict(
+            title='Time of Day',
+            tickmode='array',
+            tickvals=[0, 180, 360, 540, 720, 900, 1080, 1260, 1380],
+            ticktext=['12 AM', '3 AM', '6 AM', '9 AM', '12 PM', '3 PM', '6 PM', '9 PM', '11 PM']
+        )
+    )
+
+    # Creating the figure with data and layout
+    fig = go.Figure(data=[heatmap], layout=layout)
+    return fig
 
 
 def epw_cloud_flood_plot(epw):
     print('printing Cloud cover FloodPlot')
     selected_columns = ['year', 'month', 'day', 'hour', 'minute', 'totalSkyCover']
     data = epw[selected_columns]
-    data['datetime'] = data.apply(lambda x: datetime(int(x['year']), int(x['month']), int(x['day']), int(x['hour'] - 1), int(x['minute'])), axis=1)
+    # Convert the date and time fields into a datetime object
+    data['datetime'] = pd.to_datetime(data[['year', 'month', 'day', 'hour', 'minute']])
+    # Extract the day of the year for x-axis
     data['day_of_year'] = data['datetime'].dt.dayofyear
-    data['minutes'] = data['datetime'].apply(lambda x: x.hour * 60 + x.minute)
-    units = ''
-    color_range = color_pallete_presets().blue_to_gray_11
-    return plotly_flood_plot(data, x='minutes', y='day_of_year', z='totalSkyCover')
+    # Compute minutes from midnight for y-axis
+    data['minutes'] = data['datetime'].dt.hour * 60 + data['datetime'].dt.minute
+
+    # Aggregate data by day of year and minutes
+    agg_data = data.groupby(['minutes', 'day_of_year']).mean()['totalSkyCover'].unstack()
+
+    # Create a heatmap
+    heatmap = go.Heatmap(
+        z=agg_data.values,  # Data values
+        x=agg_data.columns,  # Day of year on x-axis
+        y=agg_data.index,  # Minutes on y-axis
+        colorscale='blues',  # Color scale for the heatmap
+        colorbar=dict(
+            title='Relative Humidity',  # Title for the color bar indicating temperature in Celsius
+            titleside='right'
+        )
+    )
+
+    # Layout configuration, including custom tick marks
+    layout = go.Layout(
+        title='Cloud Cover %',
+        xaxis=dict(
+            title='Month',
+            tickmode='array',
+            tickvals=[15, 46, 74, 105, 135, 166, 196, 227, 258, 288, 319, 349],
+            ticktext=['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+        ),
+        yaxis=dict(
+            title='Time of Day',
+            tickmode='array',
+            tickvals=[0, 180, 360, 540, 720, 900, 1080, 1260, 1380],
+            ticktext=['12 AM', '3 AM', '6 AM', '9 AM', '12 PM', '3 PM', '6 PM', '9 PM', '11 PM']
+        )
+    )
+
+    # Creating the figure with data and layout
+    fig = go.Figure(data=[heatmap], layout=layout)
+    return fig
 
 
 # def epw_wind_rose(epw, dom_id, unit_system):

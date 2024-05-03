@@ -66,6 +66,7 @@ class DownloadMethod(EpwManager):
             weather_data_instance = WeatherData(
                 dry_bulb_temp=epw_data.dry_bulb_temperature,
                 radiant_temp= epw_data.dew_point_temperature,
+                total_sky_cover= epw_data.total_sky_cover,
                 wind_direction= epw_data.wind_direction,
                 wind_speed= epw_data.wind_speed,
                 relative_humidity=epw_data.relative_humidity,
