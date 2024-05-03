@@ -131,13 +131,13 @@ class ModelController(ViktorController):
                 features.append(circle_polygon)
                 for station in load_weather_stations(location.lat, location.lon, radius):
                     description = f"""
-**Elevation**:{station['elevation']}\n
-**Years**:{station['years']}\n
-**Period**:{station['period']}\n
-**WMO**:{station['wmo']}\n
-**Dataset**:{station['dataset']}\n
-**Source**:{station['source']}\n
-"""
+                        **Elevation**:{station['elevation']}\n
+                        **Years**:{station['years']}\n
+                        **Period**:{station['period']}\n
+                        **WMO**:{station['wmo']}\n
+                        **Dataset**:{station['dataset']}\n
+                        **Source**:{station['source']}\n
+                        """
                     features.append(MapPoint(
                         lat=station['lat'],
                         lon=station['lng'],

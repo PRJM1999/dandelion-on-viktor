@@ -19,8 +19,19 @@ def plotly_flood_plot(data: pd.DataFrame, x: str, y: str, z: str):
 
     layout = go.Layout(
         title=z,
-        xaxis=dict(title=x),
-        yaxis=dict(title=y)
+        xaxis=dict(
+            title='Month',
+            tickmode='array',
+            tickvals=[15, 46, 74, 105, 135, 166, 196, 227, 258, 288, 319, 349],
+            ticktext=['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+        ),
+        yaxis=dict(
+            title='Time of Day',
+            tickmode='array',
+            tickvals=[0, 180, 360, 540, 720, 900, 1080, 1260, 1400],
+            ticktext=['12 AM', '3 AM', '6 AM', '9 AM', '12 PM', '3 PM', '6 PM', '9 PM', '12 PM']
+        )
+
     )
 
     fig = go.Figure(data=[heatmap], layout=layout)
