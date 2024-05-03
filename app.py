@@ -9,7 +9,7 @@ from viktor.result import SetParamsResult, DownloadResult
 
 from geopy.distance import geodesic
 
-from src.epw_charts import epw_temp_flood_plot, epw_rh_flood_plot, epw_cloud_flood_plot
+from src.epw_charts import epw_temp_flood_plot, epw_rh_flood_plot, epw_cloud_flood_plot, epw_wind_rose
 from src.epw_management import DownloadMethod
 from src.speckle_integration import SpeckleIntegration
 from src.station_retrieval import MongoEpwStorage
@@ -97,10 +97,10 @@ of environmental data extracted from EnergyPlus Weather .epw files.
                                                     flex=50)
     step_1.location_output = OutputField('Location selected', value=selected_location, flex=50)
 
-    step_2 = Step('Step 2 - Analysis Results', width=20, views=['visualize_data',
-                                                                'get_epw_temperature_view',
+    step_2 = Step('Step 2 - Analysis Results', width=20, views=['get_epw_temperature_view',
                                                                 'get_epw_relative_humidity_view',
-                                                                'get_epw_cloud_cover_view'])
+                                                                'get_epw_cloud_cover_view',
+                                                                'get_wind_rose_view'])
     step_2.download_epw_file_btn = DownloadButton('Download Weather data', method='download_weather_data', longpoll=True, flex=100)
 
 
@@ -177,19 +177,19 @@ class ModelController(ViktorController):
         file_content = download_method.get_zip_in_memory()
         return DownloadResult(file_content=file_content, file_name='weather_data.zip')
 
-    @DataView("OUTPUT", duration_guess=1)
-    def visualize_data(self, params, **kwargs):
-        download_method = self._get_download_method(params)
-        epw_data = download_method.get_weather_data()
+    # @DataView("OUTPUT", duration_guess=1)
+    # def visualize_data(self, params, **kwargs):
+    #     download_method = self._get_download_method(params)
+    #     epw_data = download_method.get_weather_data()
 
-        # Run the UTCI analysis
-        analysed_data = UTCICalculator(epw_data).calculate()
-        data = DataGroup(
-            DataItem('UTCI', analysed_data['utci']),
-            DataItem('Stress category', analysed_data['stress_category']),
-            DataItem('Comfort rating', analysed_data['comfort_rating'])
-        )
-        return DataResult(data)
+    #     # Run the UTCI analysis
+    #     analysed_data = UTCICalculator(epw_data).calculate()
+    #     data = DataGroup(
+    #         DataItem('UTCI', analysed_data['utci']),
+    #         DataItem('Stress category', analysed_data['stress_category']),
+    #         DataItem('Comfort rating', analysed_data['comfort_rating'])
+    #     )
+    #     return DataResult(data)
 
     @PlotlyView('EPW temperature', duration_guess=10)
     def get_epw_temperature_view(self, params, **kwargs):
@@ -210,4 +210,11 @@ class ModelController(ViktorController):
         download_method = self._get_download_method(params)
         epw_data = download_method.get_parsed_epw()
         fig = epw_cloud_flood_plot(epw_data)
+        return PlotlyResult(fig.to_json())
+
+    @PlotlyView('EPW Wind Rose', duration_guess=10)
+    def get_wind_rose_view(self, params, **kwargs):
+        download_method = self._get_download_method(params)
+        epw_data = download_method.get_weather_data()
+        fig = epw_wind_rose(epw_data)
         return PlotlyResult(fig.to_json())

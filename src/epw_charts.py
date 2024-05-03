@@ -71,16 +71,6 @@ def convert_C_to_F(array):
     return array
 
 
-def val_knots(value, index, arr):
-    arr[index] = value * 1.94384
-
-
-def convert_knots(array):
-    for index, value in enumerate(array):
-        val_knots(value, index, array)
-    return array
-
-
 def epw_temp_flood_plot(epw: pd.DataFrame):
     print('printing TempFloodPlot')
     selected_columns = ['year', 'month', 'day', 'hour', 'minute', 'dryBulbTemperature']
@@ -243,44 +233,38 @@ def epw_cloud_flood_plot(epw):
     return fig
 
 
-# def epw_wind_rose(epw, dom_id, unit_system):
-#     params = {}
-#     value = []
-#     if unit_system == 'IP':
-#         value = convert_knots(epw['windSpeed'])
-#         params['unit'] = 'knots'
-#         params['scale_steps'] = [3.5, 6.5, 10.5, 16.5, 21.5, 27]  # Beaufort scale in knots
-#         params['steps'] = 6
-#     else:
-#         value = epw['windSpeed']
-#         params['unit'] = 'm/s'
-#         params['scale_steps'] = [1.8, 3.3, 5.4, 8.5, 11.1, 13.9]  # Beaufort scale in m/s
-#         params['steps'] = 6
+def epw_wind_rose(epw_data):
+    print('Printing Wind Rose Graph')
 
-#     data = epw_data(epw, value)  # encoding most of the object construction here
-#     direction = epw['windDirection']
+    stats_df = epw_data.get_wind_stats()
 
-#     for i in range(len(value)):
-#         data[i]['direction'] = direction[i]
-#         data[i]['directionGroup'] = round(direction[i] / 22.5)
-#         if data[i]['directionGroup'] == 0:
-#             data[i]['directionGroup'] = 16  # 0 and 360 are the same
-#         if data[i]['value'] == 0:
-#             data[i]['directionGroup'] = 0  # 0 wind speed is 0 group
+    # Creating the wind rose plot
+    wind_rose = go.Barpolar(
+        r=stats_df['Frequency'],
+        theta=stats_df['Wind Direction Bin'],
+        marker=dict(
+            color=stats_df['Average_Speed'],
+            colorscale='blues',  # You can choose a different color scale as needed
+            cmin=stats_df['Average_Speed'].min(),
+            cmax=stats_df['Average_Speed'].max()
+        ),
+        hoverinfo='r+theta'
+    )
 
-#     params['id'] = f'#{dom_id}'
-#     params['min_value'] = 0
-#     params['max_value'] = max(value)
-#     params['length'] = len(value)
-#     params['directions'] = 16
-#     params['labels'] = [
-#         'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW', 'N'
-#     ]
-#     params['step_colors'] = [
-#         '#d73027', '#fc8d59', '#fee090', '#e0f3f8', '#91bfdb', '#4575b4'
-#     ]
-#     params['legend_text'] = [
-#         'Light Air', 'Light Breeze', 'Gentle Breeze', 'Moderate Breeze', 'Fresh Breeze', 'Strong Breeze'
-#     ]
+    # Layout configuration
+    layout = go.Layout(
+        title='Wind Rose',
+        polar=dict(
+            radialaxis=dict(
+                visible=False,  # Change this to True
+                range=[0, stats_df['Frequency'].max()]  # Make sure this is set to the max of Frequency, not Average_Speed
+            )
+        ),
+        legend=dict(title='Wind Speed (m/s)')
+    )
 
-#     legacy_charts.epw_radial_chart(data, params)
+
+    # Creating the figure with data and layout
+    fig = go.Figure(data=[wind_rose], layout=layout)
+    return fig
+
