@@ -14,6 +14,7 @@ from src.epw_management import DownloadMethod
 from src.speckle_integration import SpeckleIntegration
 from src.station_retrieval import MongoEpwStorage
 from src.weather_analysis import UTCICalculator
+import asyncio
 
 
 def create_map_circle(lat, long, radius):
@@ -155,8 +156,9 @@ class ModelController(ViktorController):
                     ))
         
         # Load in the projects
+        # Using asyncio for performance optimisation
         s = SpeckleIntegration()
-        projects = s.get_projects()
+        projects = asyncio.run(s.get_projects())
 
 
         for project in projects:

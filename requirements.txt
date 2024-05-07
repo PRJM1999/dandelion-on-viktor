@@ -8,3 +8,4 @@ pytest-cov
 ladybug-core
 geopy
 plotly
+aiohttp
