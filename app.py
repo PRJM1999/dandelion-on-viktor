@@ -123,6 +123,13 @@ class ModelController(ViktorController):
         features = []
         location = params.step_1.geo_point
         radius = params.step_1.radius
+
+
+
+
+        # Add in Speckle project locations
+
+
         if location:
             features.append(MapPoint.from_geo_point(location))
             if radius:
@@ -146,6 +153,23 @@ class ModelController(ViktorController):
                         color=Color.red() if str(station['_id']) == params.step_1.selected_location else Color.viktor_blue(),
                         identifier=str(station['_id'])
                     ))
+        
+        # Load in the projects
+        s = SpeckleIntegration()
+        projects = s.get_projects()
+
+
+        for project in projects:
+            if project.lat is not None and project.long is not None:  # Ensure coordinates are provided
+                features.append(MapPoint(
+                    lat=project.lat,
+                    lon=project.long,
+                    title=project.name,
+                    color=Color.viktor_yellow(),  # Customize as needed
+                    identifier=project.stream_id
+                ))
+
+
         return MapResult(features)
 
     @staticmethod
