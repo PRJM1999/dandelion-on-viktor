@@ -158,7 +158,7 @@ class ModelController(ViktorController):
         # Load in the projects
         # Using asyncio for performance optimisation
         s = SpeckleIntegration()
-        projects = asyncio.run(s.get_projects())
+        projects = s.get_projects()
 
 
         for project in projects:
