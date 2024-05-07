@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from ladybug.datacollection import HourlyContinuousCollection
 import pandas as pd
 import numpy as np
+from typing import Optional
 
 @dataclass
 class WeatherData:
@@ -21,7 +22,9 @@ class WeatherData:
             self.convert_to_si()
 
     def convert_to_si(self):
-        # Use built-in Ladybug methods to convert all relevant weather data to SI units
+        """
+        Uses built-in Ladybug methods to convert all relevant weather data to SI units
+        """
         self.dry_bulb_temp = self.dry_bulb_temp.convert_to_si()
         self.radiant_temp = self.radiant_temp.convert_to_si()
         self.wind_speed = self.wind_speed.convert_to_si()
@@ -31,7 +34,9 @@ class WeatherData:
         self.units = "SI"
 
     def convert_to_ip(self):
-        # Convert all relevant weather data to Imperial units if needed
+        """
+        Uses built-in Ladybug methods to convert all relevant weather data to imperial units.
+        """
         self.dry_bulb_temp = self.dry_bulb_temp.convert_to_ip()
         self.radiant_temp = self.radiant_temp.convert_to_ip()
         self.wind_speed = self.wind_speed.convert_to_ip()
@@ -68,3 +73,14 @@ class WeatherData:
 
         return stats_df
 
+
+@dataclass
+class SpeckleProject:
+    """
+    Custom class used to store speckle project information.
+    """
+
+    stream_id: str
+    name: str
+    lat: Optional[float] = None
+    long: Optional[float] = None
