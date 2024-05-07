@@ -17,7 +17,7 @@ class SpeckleIntegration:
     def get_projects(self) -> list[SpeckleProject]:
         """Fetches projects from Speckle and returns them."""
         processed_objects = []
-        projects = self.client.stream.list(stream_limit=100)  # Adjust based on what you want to fetch  
+        projects = self.client.stream.list(stream_limit=2)  # Adjust based on what you want to fetch  
 
         for project in projects:
             processed_project = SpeckleProject(stream_id=project.id, name=project.name)

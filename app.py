@@ -75,6 +75,13 @@ def selected_location(params, **kwargs):
             return station['name']
     return ''
 
+def update_coordinates(params, **kwargs):
+    print(params.external.project_dropdown)
+
+# Load in the projects
+s = SpeckleIntegration()
+projects = s.get_projects()
+
 
 class Parametrization(ViktorParametrization):
     """The Parametrization is used to define all the input parameters of the VIKTOR application."""
@@ -86,11 +93,15 @@ of environmental data extracted from EnergyPlus Weather .epw files.
 
 **Step 1: Select your location and radius**
     """)
-    # step_1.get_project_locations_btn = SetParamsButton('Get Project Locations', method='get_project_locations')
+    step_1.description = Text("If the project is active in the Speckle Server with a location set up you can set the location from below:")
+    step_1.project_dropdown = OptionField('Select Project', options=[OptionListElement(i.stream_id, i.name) for i in projects], flex=70)
+    step_1.get_project_coords_button = SetParamsButton('Update Coordinates', method='update_the_coords', flex=29)
+    step_1.location_test = Text("If project is not on speckle, a location can be added manually below: ")
     step_1.geo_point = GeoPointField('Select a location', default=GeoPoint(51.5, -0.123))
     step_1.radius = NumberField('Radius', min=0, max=100, variant='slider', default=10, flex=100)
 
     step_1.step_2_text = Text("**Step 2: Select the location**")
+    step_1.step_2_description = Text("Select an appropriate weather station on the map by clicking the button below, and clicking the location on the map.")
     step_1.selected_location = OptionField('Select Location having EPW files', options=weather_station_options, visible=False)
     step_1.select_location_button = SetParamsButton('Select location from map',
                                                     method='set_location_from_selection',
@@ -110,11 +121,6 @@ class ModelController(ViktorController):
     label = 'Dandelion'      # label to be shown in the interface
     parametrization = Parametrization  # assign the parametrization class to the controller class
 
-    def get_project_locations(self, params, **kwargs):
-        speckle_integration = SpeckleIntegration()
-        print(speckle_integration.get_projects())
-        return SetParamsResult(params)
-
     @MapView('Map view', duration_guess=1)
     def get_map_view(self, params, **kwargs):
         """This method renders the map view in step 1.
@@ -124,12 +130,6 @@ class ModelController(ViktorController):
         features = []
         location = params.step_1.geo_point
         radius = params.step_1.radius
-
-
-
-
-        # Add in Speckle project locations
-
 
         if location:
             features.append(MapPoint.from_geo_point(location))
@@ -155,10 +155,7 @@ class ModelController(ViktorController):
                         identifier=str(station['_id'])
                     ))
         
-        # Load in the projects
-        # Using asyncio for performance optimisation
-        s = SpeckleIntegration()
-        projects = s.get_projects()
+
 
 
         for project in projects:
@@ -180,6 +177,19 @@ class ModelController(ViktorController):
         selected_location = event.value[0]
         params.step_1.selected_location = selected_location
         return SetParamsResult(params)
+        
+    @staticmethod
+    def update_the_coords(params, **kwargs):
+        selected_project_id = params.step_1.project_dropdown
+        selected_project = next((p for p in projects if p.stream_id == selected_project_id), None)
+
+        if selected_project and selected_project.lat and selected_project.long:
+            updated_geo_point = GeoPoint(selected_project.lat, selected_project.long)
+            params.step_1.geo_point = updated_geo_point
+            return SetParamsResult(params)
+        else:
+            raise UserError("Selected project does not have valid coordinates or does not exist.")
+      
 
     @staticmethod
     def _get_download_method(params):
@@ -202,20 +212,6 @@ class ModelController(ViktorController):
         download_method = self._get_download_method(params)
         file_content = download_method.get_zip_in_memory()
         return DownloadResult(file_content=file_content, file_name='weather_data.zip')
-
-    # @DataView("OUTPUT", duration_guess=1)
-    # def visualize_data(self, params, **kwargs):
-    #     download_method = self._get_download_method(params)
-    #     epw_data = download_method.get_weather_data()
-
-    #     # Run the UTCI analysis
-    #     analysed_data = UTCICalculator(epw_data).calculate()
-    #     data = DataGroup(
-    #         DataItem('UTCI', analysed_data['utci']),
-    #         DataItem('Stress category', analysed_data['stress_category']),
-    #         DataItem('Comfort rating', analysed_data['comfort_rating'])
-    #     )
-    #     return DataResult(data)
 
     @PlotlyView('EPW temperature', duration_guess=10)
     def get_epw_temperature_view(self, params, **kwargs):
