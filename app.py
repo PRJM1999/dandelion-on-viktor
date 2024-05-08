@@ -1,10 +1,9 @@
 from viktor import ViktorController, UserError, Color
 from viktor.parametrization import ViktorParametrization, Text, OptionField, \
-    GeoPointField, Step, NumberField, DownloadButton, ActionButton, GeoPoint, \
-    SetParamsButton, MapSelectInteraction, OptionListElement, LineBreak, OutputField
+    GeoPointField, Step, NumberField, DownloadButton, GeoPoint, \
+    SetParamsButton, MapSelectInteraction, OptionListElement, OutputField
 from viktor.utils import memoize
-from viktor.views import MapView, MapResult, MapPoint, MapPolygon, ImageView, ImageResult, DataView, \
-    DataGroup, DataItem, DataResult, PlotlyView, PlotlyResult
+from viktor.views import MapView, MapResult, MapPoint, MapPolygon, PlotlyView, PlotlyResult
 from viktor.result import SetParamsResult, DownloadResult
 
 from geopy.distance import geodesic
@@ -13,8 +12,6 @@ from src.epw_charts import epw_temp_flood_plot, epw_rh_flood_plot, epw_cloud_flo
 from src.epw_management import DownloadMethod
 from src.speckle_integration import SpeckleIntegration
 from src.station_retrieval import MongoEpwStorage
-from src.weather_analysis import UTCICalculator
-import asyncio
 
 
 def create_map_circle(lat, long, radius):
@@ -64,6 +61,16 @@ def weather_station_options(params, **kwargs):
     return [OptionListElement(label=station['name'], value=str(station['_id'])) for station in load_weather_stations(location.lat, location.lon, radius)]
 
 
+def project_options(params, **kwargs):
+    # Load in the projects
+    s = SpeckleIntegration()
+    try:
+        projects = s.get_projects()
+    except TypeError as e:
+        projects = []
+    return [OptionListElement(i.stream_id, i.name) for i in projects]
+
+
 def selected_location(params, **kwargs):
     location = params.step_1.geo_point
     radius = params.step_1.radius
@@ -75,12 +82,9 @@ def selected_location(params, **kwargs):
             return station['name']
     return ''
 
+
 def update_coordinates(params, **kwargs):
     print(params.external.project_dropdown)
-
-# Load in the projects
-s = SpeckleIntegration()
-projects = s.get_projects()
 
 
 class Parametrization(ViktorParametrization):
@@ -94,7 +98,7 @@ of environmental data extracted from EnergyPlus Weather .epw files.
 **Step 1: Select your location and radius**
     """)
     step_1.description = Text("If the project is active in the Speckle Server with a location set up you can set the location from below:")
-    step_1.project_dropdown = OptionField('Select Project', options=[OptionListElement(i.stream_id, i.name) for i in projects], flex=70)
+    step_1.project_dropdown = OptionField('Select Project', options=project_options, flex=70)
     step_1.get_project_coords_button = SetParamsButton('Update Coordinates', method='update_the_coords', flex=29)
     step_1.location_test = Text("If project is not on speckle, a location can be added manually below: ")
     step_1.geo_point = GeoPointField('Select a location', default=GeoPoint(51.5, -0.123))
@@ -154,20 +158,27 @@ class ModelController(ViktorController):
                         color=Color.red() if str(station['_id']) == params.step_1.selected_location else Color.viktor_blue(),
                         identifier=str(station['_id'])
                     ))
-        
 
-
+        # Load in the projects
+        s = SpeckleIntegration()
+        try:
+            projects = s.get_projects()
+        except TypeError as e:
+            projects = []
 
         for project in projects:
             if project.lat is not None and project.long is not None:  # Ensure coordinates are provided
+                if project.stream_id == params.step_1.project_dropdown:
+                    color = Color.green()
+                else:
+                    color = Color.viktor_yellow()
                 features.append(MapPoint(
                     lat=project.lat,
                     lon=project.long,
                     title=project.name,
-                    color=Color.viktor_yellow(),  # Customize as needed
+                    color=color,  # Customize as needed
                     identifier=project.stream_id
                 ))
-
 
         return MapResult(features)
 
@@ -180,6 +191,12 @@ class ModelController(ViktorController):
         
     @staticmethod
     def update_the_coords(params, **kwargs):
+        # Load in the projects
+        s = SpeckleIntegration()
+        try:
+            projects = s.get_projects()
+        except TypeError as e:
+            projects = []
         selected_project_id = params.step_1.project_dropdown
         selected_project = next((p for p in projects if p.stream_id == selected_project_id), None)
 
