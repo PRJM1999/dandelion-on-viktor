@@ -216,21 +216,21 @@ class ModelController(ViktorController):
     @PlotlyView('EPW temperature', duration_guess=10)
     def get_epw_temperature_view(self, params, **kwargs):
         download_method = self._get_download_method(params)
-        epw_data = download_method.get_parsed_epw()
+        epw_data = download_method.get_weather_data()
         fig = epw_temp_flood_plot(epw_data)
         return PlotlyResult(fig.to_json())
 
     @PlotlyView('EPW Relative humidity', duration_guess=10)
     def get_epw_relative_humidity_view(self, params, **kwargs):
         download_method = self._get_download_method(params)
-        epw_data = download_method.get_parsed_epw()
+        epw_data = download_method.get_weather_data()
         fig = epw_rh_flood_plot(epw_data)
         return PlotlyResult(fig.to_json())
 
     @PlotlyView('EPW Cloud cover', duration_guess=10)
     def get_epw_cloud_cover_view(self, params, **kwargs):
         download_method = self._get_download_method(params)
-        epw_data = download_method.get_parsed_epw()
+        epw_data = download_method.get_weather_data()
         fig = epw_cloud_flood_plot(epw_data)
         return PlotlyResult(fig.to_json())
 
