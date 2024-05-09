@@ -5,6 +5,8 @@ from abc import ABC, abstractmethod
 from typing import List, Any
 import requests
 from src.graphql_queries import GET_STREAMS_QUERY
+import asyncio
+import aiohttp
 
 
 class BaseSpeckleIntegration(ABC):
@@ -25,9 +27,8 @@ class GraphQLSpeckleIntegration(BaseSpeckleIntegration):
     def get_projects(self) -> List[SpeckleProject]:
         """Fetches streams (projects) from Speckle GraphQL API and returns them."""
         all_projects = []
-        processed_projects = []
         cursor = None
-        max_num_projects, counter = 2, 0  
+        max_num_projects, counter = 1000, 0  
 
         while counter < max_num_projects:
             response = requests.post(
@@ -52,46 +53,66 @@ class GraphQLSpeckleIntegration(BaseSpeckleIntegration):
             counter += 1
             cursor = data.get("streams", {}).get("cursor")
         
-        for project in all_projects:
+        async def fetch_data(all_projects):
+            async with aiohttp.ClientSession() as session:
+                tasks = []
+                project_results = [{}] * len(all_projects)  # Initialize with empty dicts for all projects
+
+                for index, project in enumerate(all_projects):
+                    branches = project.get('branches', {}).get('items', [])
+                    task_added = False
+
+                    for branch in branches:
+                        if branch.get('name') == 'roots' and branch.get('commits', {}).get('items', []):
+                            object_id = branch['commits']['items'][0].get('referencedObject')
+                            if object_id:
+                                task = asyncio.create_task(self.get_object_data(session, project['id'], object_id))
+                                tasks.append((task, index))  # Store task along with project index
+                                task_added = True
+
+                    if not task_added:
+                        project_results[index] = {}  # Ensure default data is already in place
+
+                # Wait for all tasks to complete and assign their results to the correct project
+                for task, index in tasks:
+                    try:
+                        result = await task
+                        project_results[index] = result if result else {}
+                    except Exception as e:
+                        print(f"Error fetching data for project {all_projects[index]['id']}: {str(e)}")
+                        project_results[index] = {}  # Set default on error
+
+                return project_results
+        
+        # Run the asyncio event loop to fetch object data
+        loop = asyncio.get_event_loop()
+        roots_data_list = loop.run_until_complete(fetch_data(all_projects))
+        
+
+        processed_projects = []
+        for project, roots_data in zip(all_projects, roots_data_list):
             processed_project = SpeckleProject(stream_id=project['id'], name=project['name'])
-
-            try:
-                if project['branches']['items']:
-
-                    for branch in project['branches']['items']:
-
-                        if branch['name'] == 'roots' and len(branch['commits']['items']) > 0:
-                            object_id = branch['commits']['items'][0]['referencedObject']
-                            roots_data = self.get_object_data(stream_id=project['id'], referenced_object=object_id)
-                            if roots_data['ATK_Lat'] and roots_data['ATK_Lon']:
-                                processed_project.lat = float(roots_data['ATK_Lat'])
-                                processed_project.long = float(roots_data['ATK_Lon'])
-            
-                processed_projects.append(processed_project)
-            
-            except:
-                project("Projects has no roots branch or no coordinates")
+            if roots_data and 'ATK_Lat' in roots_data and 'ATK_Lon' in roots_data:
+                processed_project.lat = float(roots_data['ATK_Lat'])
+                processed_project.long = float(roots_data['ATK_Lon'])
+            processed_projects.append(processed_project)
 
         return processed_projects
-    
-    def get_object_data(self, stream_id: str, referenced_object: str) -> Any:
-        """Fetches a specific object by stream ID and referenced object."""
+        
+    async def get_object_data(self, session, stream_id: str, referenced_object: str) -> dict:
+        """Fetches a specific object by stream ID and referenced object asynchronously."""
         try:
-            response = requests.get(
-                f"{self.base_url}/objects/{stream_id}/{referenced_object}",
-                headers=self.headers
-            )
-
-            if response.status_code != 200:
-                raise Exception(f"HTTP error! Status: {response.status_code}")
-
-            data = response.json()
-            return data[0] if isinstance(data, list) else data
-
+            async with session.get(f"{self.base_url}/objects/{stream_id}/{referenced_object}", headers=self.headers, timeout=10) as response:
+                response.raise_for_status()
+                data = await response.json()
+                return data[0] if isinstance(data, list) else data
+        except asyncio.TimeoutError:
+            print(f"Request timed out for object {referenced_object} in stream {stream_id}")
+        except aiohttp.ClientResponseError as e:
+            print(f"HTTP error! Status: {e.status}")
         except Exception as e:
             print(f"Error fetching object: {e}")
-            raise
-
+        return {}
 
 class SpecklePyIntegration(BaseSpeckleIntegration):
     def __init__(self):

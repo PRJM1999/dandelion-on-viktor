@@ -2,7 +2,7 @@
 
 GET_STREAMS_QUERY = """
     query Streams($cursor: String) {
-        streams(cursor: $cursor, limit: 1) {
+        streams(cursor: $cursor, limit: 50) {
             cursor
             items {
                 id
