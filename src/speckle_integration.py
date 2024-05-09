@@ -17,6 +17,7 @@ class BaseSpeckleIntegration(ABC):
 
 class GraphQLSpeckleIntegration(BaseSpeckleIntegration):
     def __init__(self):
+        """Initializes the integration with Speckle GraphQL API."""
         self.base_url = "***REMOVED***"
         self.api_token = "***REMOVED***"
         self.headers = {
@@ -25,10 +26,26 @@ class GraphQLSpeckleIntegration(BaseSpeckleIntegration):
         }
 
     def get_projects(self) -> List[SpeckleProject]:
-        """Fetches streams (projects) from Speckle GraphQL API and returns them."""
+        """
+        Fetches streams (projects) from the Speckle GraphQL API and returns them as processed SpeckleProject objects.
+
+        Returns:
+            List[SpeckleProject]: A list of SpeckleProject objects with latitude and longitude information if available.
+        """
+        all_projects = self.fetch_all_projects()
+        roots_data_list = self.collect_root_data(all_projects)
+        return self.process_projects(all_projects, roots_data_list)
+
+    def fetch_all_projects(self) -> List[dict]:
+        """
+        Retrieves all projects (streams) from the GraphQL API.
+
+        Returns:
+            List[dict]: A list of project data dictionaries.
+        """
         all_projects = []
         cursor = None
-        max_num_projects, counter = 1000, 0  
+        max_num_projects, counter = 1000, 0
 
         while counter < max_num_projects:
             response = requests.post(
@@ -52,43 +69,77 @@ class GraphQLSpeckleIntegration(BaseSpeckleIntegration):
             all_projects.extend(fetched_projects)
             counter += 1
             cursor = data.get("streams", {}).get("cursor")
-        
-        async def fetch_data(all_projects):
-            async with aiohttp.ClientSession() as session:
-                tasks = []
-                project_results = [{}] * len(all_projects)  # Initialize with empty dicts for all projects
 
-                for index, project in enumerate(all_projects):
-                    branches = project.get('branches', {}).get('items', [])
-                    task_added = False
+        return all_projects
 
-                    for branch in branches:
-                        if branch.get('name') == 'roots' and branch.get('commits', {}).get('items', []):
-                            object_id = branch['commits']['items'][0].get('referencedObject')
-                            if object_id:
-                                task = asyncio.create_task(self.get_object_data(session, project['id'], object_id))
-                                tasks.append((task, index))  # Store task along with project index
-                                task_added = True
+    async def fetch_root_data_async(self, session, all_projects) -> List[dict]:
+        """
+        Fetches root data for all projects asynchronously using aiohttp.
 
-                    if not task_added:
-                        project_results[index] = {}  # Ensure default data is already in place
+        Args:
+            session (aiohttp.ClientSession): An active aiohttp session object.
+            all_projects (List[dict]): List of projects fetched from the API.
 
-                # Wait for all tasks to complete and assign their results to the correct project
-                for task, index in tasks:
-                    try:
-                        result = await task
-                        project_results[index] = result if result else {}
-                    except Exception as e:
-                        print(f"Error fetching data for project {all_projects[index]['id']}: {str(e)}")
-                        project_results[index] = {}  # Set default on error
+        Returns:
+            List[dict]: A list of dictionaries representing root data for each project.
+        """
+        tasks = []
+        project_results = [{}] * len(all_projects)
 
-                return project_results
-        
-        # Run the asyncio event loop to fetch object data
+        for index, project in enumerate(all_projects):
+            branches = project.get('branches', {}).get('items', [])
+            task_added = False
+
+            for branch in branches:
+                if branch.get('name') == 'roots' and branch.get('commits', {}).get('items', []):
+                    object_id = branch['commits']['items'][0].get('referencedObject')
+                    if object_id:
+                        task = asyncio.create_task(self.get_object_data(session, project['id'], object_id))
+                        tasks.append((task, index))
+                        task_added = True
+
+            if not task_added:
+                project_results[index] = {}
+
+        # Assign results to the corresponding projects
+        for task, index in tasks:
+            try:
+                result = await task
+                project_results[index] = result if result else {}
+            except Exception as e:
+                print(f"Error fetching data for project {all_projects[index]['id']}: {str(e)}")
+                project_results[index] = {}
+
+        return project_results
+
+    def collect_root_data(self, all_projects) -> List[dict]:
+        """
+        Collects root data for all projects by running an asynchronous event loop.
+
+        Args:
+            all_projects (List[dict]): List of projects fetched from the API.
+
+        Returns:
+            List[dict]: A list of dictionaries containing root data.
+        """
         loop = asyncio.get_event_loop()
-        roots_data_list = loop.run_until_complete(fetch_data(all_projects))
-        
+        async def fetch_data():
+            async with aiohttp.ClientSession() as session:
+                return await self.fetch_root_data_async(session, all_projects)
 
+        return loop.run_until_complete(fetch_data())
+
+    def process_projects(self, all_projects, roots_data_list) -> List[SpeckleProject]:
+        """
+        Processes the projects and integrates root data.
+
+        Args:
+            all_projects (List[dict]): List of project data dictionaries.
+            roots_data_list (List[dict]): List of dictionaries containing root data.
+
+        Returns:
+            List[SpeckleProject]: List of SpeckleProject objects.
+        """
         processed_projects = []
         for project, roots_data in zip(all_projects, roots_data_list):
             processed_project = SpeckleProject(stream_id=project['id'], name=project['name'])
@@ -98,9 +149,19 @@ class GraphQLSpeckleIntegration(BaseSpeckleIntegration):
             processed_projects.append(processed_project)
 
         return processed_projects
-        
+
     async def get_object_data(self, session, stream_id: str, referenced_object: str) -> dict:
-        """Fetches a specific object by stream ID and referenced object asynchronously."""
+        """
+        Fetches a specific object by stream ID and referenced object asynchronously.
+
+        Args:
+            session (aiohttp.ClientSession): An active aiohttp session object.
+            stream_id (str): The ID of the stream to fetch data from.
+            referenced_object (str): The ID of the referenced object to fetch.
+
+        Returns:
+            dict: A dictionary containing the object's data if successful, or an empty dictionary otherwise.
+        """
         try:
             async with session.get(f"{self.base_url}/objects/{stream_id}/{referenced_object}", headers=self.headers, timeout=10) as response:
                 response.raise_for_status()
