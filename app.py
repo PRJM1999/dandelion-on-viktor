@@ -10,8 +10,14 @@ from geopy.distance import geodesic
 
 from src.epw_charts import epw_temp_flood_plot, epw_rh_flood_plot, epw_cloud_flood_plot, epw_wind_rose
 from src.epw_management import DownloadMethod
-from src.speckle_integration import SpeckleIntegration
+from src.speckle_integration import GraphQLSpeckleIntegration, SpecklePyIntegration
 from src.station_retrieval import MongoEpwStorage
+
+s = GraphQLSpeckleIntegration()
+try:
+    projects = s.get_projects()
+except TypeError as e:
+    projects = []
 
 
 def create_map_circle(lat, long, radius):
@@ -62,12 +68,6 @@ def weather_station_options(params, **kwargs):
 
 
 def project_options(params, **kwargs):
-    # Load in the projects
-    s = SpeckleIntegration()
-    try:
-        projects = s.get_projects()
-    except TypeError as e:
-        projects = []
     return [OptionListElement(i.stream_id, i.name) for i in projects]
 
 
@@ -159,13 +159,6 @@ class ModelController(ViktorController):
                         identifier=str(station['_id'])
                     ))
 
-        # Load in the projects
-        s = SpeckleIntegration()
-        try:
-            projects = s.get_projects()
-        except TypeError as e:
-            projects = []
-
         for project in projects:
             if project.lat is not None and project.long is not None:  # Ensure coordinates are provided
                 if project.stream_id == params.step_1.project_dropdown:
@@ -191,12 +184,6 @@ class ModelController(ViktorController):
         
     @staticmethod
     def update_the_coords(params, **kwargs):
-        # Load in the projects
-        s = SpeckleIntegration()
-        try:
-            projects = s.get_projects()
-        except TypeError as e:
-            projects = []
         selected_project_id = params.step_1.project_dropdown
         selected_project = next((p for p in projects if p.stream_id == selected_project_id), None)
 

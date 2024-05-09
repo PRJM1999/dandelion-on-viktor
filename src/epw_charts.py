@@ -15,6 +15,7 @@ def clear_epw_chart(element_id):
 
     arr[index] = 32 + value * 1.8
 
+
 def epw_temp_flood_plot(epw: EPW):
     datetimes = [datetime.strptime(dt_str, "%d %b %H:%M") for dt_str in epw.dry_bulb_temp.datetime_strings]
     day_of_year_list = [dt.timetuple().tm_yday for dt in datetimes]
