@@ -34,10 +34,26 @@ To maintain and ensure the reliability and stability of our production environme
 
 ## Environment Setup
 
-To get the application connected to a relevant Speckle Server, you need to set up an `.env` file with the following variables:
+To get the application connected to a relevant Speckle Server and EPW database, you need to set up an `.env` file with the following variables:
 
 ```env
 SPECKLE_BASE_URL=SPECKLE SERVER URL HERE
 SPECKLE_API_TOKEN=TOKEN HERE
+MONGODB_URI=URI HERE
 ```
 
+## EPW Database Format
+
+The MongoDB collection 'epw' in the database 'dandelion' should contain documents representing weather stations. Each document should have the following structure:
+
+```sh
+{
+  "lat": <Latitude of the weather station (float)>,
+  "lng": <Longitude of the weather station (float)>,
+  "station_id": <Unique identifier for the weather station (string)>,
+  "station_name": <Name of the weather station (string)>,
+  "data": <Additional data related to the weather station (object)>
+}
+```
+
+By following this format, you can ensure that your MongoDB EPW database is set up correctly and your application can retrieve weather station data effectively.
