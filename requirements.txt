@@ -9,3 +9,6 @@ ladybug-core
 geopy
 plotly
 aiohttp
+python-dotenv
+pytest-asyncio
+

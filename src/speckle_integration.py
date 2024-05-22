@@ -1,3 +1,5 @@
+import os
+from dotenv import load_dotenv
 from specklepy.api.client import SpeckleClient
 from specklepy.api.credentials import get_default_account
 from src.data_objects import SpeckleProject
@@ -8,6 +10,8 @@ from src.graphql_queries import GET_STREAMS_QUERY
 import asyncio
 import aiohttp
 
+# Load environment variables
+load_dotenv()
 
 class BaseSpeckleIntegration(ABC):
     @abstractmethod
@@ -18,8 +22,8 @@ class BaseSpeckleIntegration(ABC):
 class GraphQLSpeckleIntegration(BaseSpeckleIntegration):
     def __init__(self):
         """Initializes the integration with Speckle GraphQL API."""
-        self.base_url = "***REMOVED***"
-        self.api_token = "***REMOVED***"
+        self.base_url = os.getenv('SPECKLE_BASE_URL')
+        self.api_token = os.getenv('SPECKLE_API_TOKEN')
         self.headers = {
             'Authorization': f'Bearer {self.api_token}',
             'Content-Type': 'application/json'
@@ -175,16 +179,17 @@ class GraphQLSpeckleIntegration(BaseSpeckleIntegration):
             print(f"Error fetching object: {e}")
         return {}
 
+
 class SpecklePyIntegration(BaseSpeckleIntegration):
     def __init__(self):
         self.client = self.initialize_speckle_client()
 
     def initialize_speckle_client(self):
         """Initializes and returns a Speckle client."""
-        client = SpeckleClient(host="***REMOVED***")
+        client = SpeckleClient(host=os.getenv('SPECKLE_BASE_URL'))
         account = get_default_account()
         if account:
-            client.authenticate(token='***REMOVED***')
+            client.authenticate(token=os.getenv('SPECKLE_API_TOKEN'))
         return client
 
     def get_projects(self) -> list[SpeckleProject]:
