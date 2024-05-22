@@ -1,3 +1,7 @@
+## Dandelion Weather App
+
+Dandelion is a powerful tool designed to provide insightful visualizations of environmental data extracted from EnergyPlus Weather `.epw` files. By allowing users to **find** and **download** `.epw` files. Dandelion empowers analysis and comprehension of various environmental aspects through comprehensive graphs and charts. Leveraging the open-source EPW repository from Ladybug, Dandelion ensures access to a wide range of EPW data for analysis.
+
 ## Testing
 
 ### Running Tests
@@ -55,5 +59,8 @@ The MongoDB collection 'epw' in the database 'dandelion' should contain document
   "data": <Additional data related to the weather station (object)>
 }
 ```
-
 By following this format, you can ensure that your MongoDB EPW database is set up correctly and your application can retrieve weather station data effectively.
+
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more details.
