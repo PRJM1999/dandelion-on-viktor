@@ -11,4 +11,5 @@ plotly
 aiohttp
 python-dotenv
 pytest-asyncio
+pandas
 

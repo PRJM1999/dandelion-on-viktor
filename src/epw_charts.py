@@ -5,17 +5,6 @@ import plotly.graph_objects as go
 from ladybug.epw import EPW
 
 
-def clear_epw_charts():
-    plt.close('all')
-
-
-def clear_epw_chart(element_id):
-    plt.figure(element_id)
-    plt.clf()
-
-    arr[index] = 32 + value * 1.8
-
-
 def epw_temp_flood_plot(epw: EPW):
     datetimes = [datetime.strptime(dt_str, "%d %b %H:%M") for dt_str in epw.dry_bulb_temp.datetime_strings]
     day_of_year_list = [dt.timetuple().tm_yday for dt in datetimes]
