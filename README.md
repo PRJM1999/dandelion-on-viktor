@@ -98,4 +98,4 @@ To maintain and ensure the reliability and stability of our production environme
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more details.
+This project is licensed under the MIT License. See the [licence](licence) file for more details.
