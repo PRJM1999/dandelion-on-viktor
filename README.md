@@ -2,7 +2,7 @@
 
 Dandelion is a powerful tool designed to provide insightful visualizations of environmental data extracted from EnergyPlus Weather `.epw` files. By allowing users to **find** and **download** `.epw` files. Dandelion empowers analysis and comprehension of various environmental aspects through comprehensive graphs and charts. Leveraging the open-source EPW repository from Ladybug, Dandelion ensures access to a wide range of EPW data for analysis.
 
-## Getting Start
+## Getting Started
 
 ### Prerequisites
 
