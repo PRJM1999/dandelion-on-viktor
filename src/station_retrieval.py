@@ -2,6 +2,8 @@ from abc import ABC, abstractmethod
 from typing import List, Dict, Optional
 from pymongo import MongoClient
 from src.utility import haversine
+from dotenv import load_dotenv
+import os
 
 
 class WeatherStationRetrieval(ABC):
@@ -38,6 +40,8 @@ class WeatherStationRetrieval(ABC):
         """
         pass
 
+# Load environment variables from .env file
+load_dotenv()
 
 class MongoEpwStorage(WeatherStationRetrieval):
     """
@@ -45,7 +49,7 @@ class MongoEpwStorage(WeatherStationRetrieval):
     """
 
     def __init__(self):
-        self.client = MongoClient('mongodb://adminhcd:rD%5ETXq%407i7Bn@52.151.65.152:27017/admin?authSource=admin&readPreference=primary&appname=MongoDB%20Compass&ssl=false')
+        self.client = MongoClient('MONGODB_URI')
         self.db = self.client['dandelion']
         self.collection = self.db['epw']
 
