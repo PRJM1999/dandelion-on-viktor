@@ -46,7 +46,7 @@ MONGODB_URI=URI HERE
 
 The MongoDB collection 'epw' in the database 'dandelion' should contain documents representing weather stations. Each document should have the following structure:
 
-```sh
+```py
 {
   "lat": <Latitude of the weather station (float)>,
   "lng": <Longitude of the weather station (float)>,
