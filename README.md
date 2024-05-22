@@ -32,3 +32,12 @@ This will generate a `htmlcov` directory containing the coverage report in HTML 
 
 To maintain and ensure the reliability and stability of our production environment, we require a **minimum test coverage score of 75%**. This threshold helps us ensure that the majority of our codebase is covered by tests, reducing the likelihood of bugs and regressions.
 
+## Environment Setup
+
+To get the application connected to a relevant Speckle Server, you need to set up an `.env` file with the following variables:
+
+```env
+SPECKLE_BASE_URL=SPECKLE SERVER URL HERE
+SPECKLE_API_TOKEN=TOKEN HERE
+```
+
